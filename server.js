@@ -9,7 +9,7 @@ const ROOT = __dirname;
 const PORT = +(process.argv[2] || process.env.PORT || 8080);
 const TYPES = {
   '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8',
-  '.png': 'image/png', '.json': 'application/json', '.md': 'text/markdown; charset=utf-8', '.ico': 'image/x-icon',
+  '.png': 'image/png', '.mp3': 'audio/mpeg', '.webmanifest': 'application/manifest+json', '.json': 'application/json', '.md': 'text/markdown; charset=utf-8', '.ico': 'image/x-icon',
 };
 
 const server = http.createServer((req, res) => {

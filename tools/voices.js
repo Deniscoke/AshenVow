@@ -44,7 +44,7 @@ const VOICES = {
   ghost_man: { id: 'iP95p4xoKVk53GoZ742B', stability: 0.55, style: 0.3 },   // Chris
   ghost_woman: { id: '9BWtsMINqrJLrRacOk9x', stability: 0.55, style: 0.3 }, // Aria
   ghost_child: { id: 'cgSgspJ2msm6clMCkdW9', stability: 0.5, style: 0.35 },
-  ghost_soldier: { id: 'TX3LPaxmHKxFdv7VzQTh', stability: 0.5, style: 0.35 }, // Liam
+  ghost_soldier: { id: 'nPczCjzI2devNBz1zQrb', stability: 0.5, style: 0.35 }, // Brian (deep)
   ghost_monk: { id: 'SAz9YHcvj6GT2YYXdXww', stability: 0.6, style: 0.2 },   // River
 };
 
