@@ -1,0 +1,18 @@
+{
+  "name": "ashen-vow",
+  "version": "1.0.0",
+  "description": "ASHEN VOW — a dark-fantasy pixel-art action RPG. Plain JavaScript + Canvas, no dependencies.",
+  "private": true,
+  "scripts": {
+    "start": "node server.js 8080",
+    "dev": "node server.js 8080",
+    "check": "node tools/check.js",
+    "test": "node tools/check.js && node tools/audio_smoke.js && node tools/sim.js all",
+    "preview": "node tools/preview.js",
+    "sim": "node tools/sim.js all"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "UNLICENSED"
+}

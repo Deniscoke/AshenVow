@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <title>Ashen Vow</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="assets/icon-192.png">
+  <link rel="apple-touch-icon" href="assets/icon-192.png">
+  <meta name="theme-color" content="#07060a">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="description" content="A dark-fantasy pixel-art action RPG about a knight who cannot die and the ash that remembers him.">
+  <style>
+    html, body { margin: 0; height: 100%; background: #07060a; overflow: hidden; touch-action: none;
+      -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; overscroll-behavior: none; }
+    body { display: flex; align-items: center; justify-content: center; }
+    #game { image-rendering: pixelated; image-rendering: crisp-edges; display: block; background: #07060a; outline: none; }
+    #loading { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; color: #655c69;
+      font: 14px Georgia, 'Times New Roman', serif; letter-spacing: 0.3em; }
+    noscript { color: #a8a0a6; font: 14px Georgia, serif; }
+  </style>
+</head>
+<body>
+  <canvas id="game" width="384" height="216" tabindex="0"></canvas>
+  <div id="loading">ASH GATHERS…</div>
+  <noscript>Ashen Vow needs JavaScript enabled.</noscript>
+  <script src="src/files.js" data-autoload="1"></script>
+</body>
+</html>
