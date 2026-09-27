@@ -9,7 +9,8 @@
     "check": "node tools/check.js",
     "test": "node tools/check.js && node tools/audio_smoke.js && node tools/sim.js all",
     "preview": "node tools/preview.js",
-    "sim": "node tools/sim.js all"
+    "sim": "node tools/sim.js all",
+    "build": "node tools/build.js"
   },
   "engines": {
     "node": ">=18"

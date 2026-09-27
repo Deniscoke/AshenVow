@@ -1,0 +1,9 @@
+{
+  "framework": null,
+  "installCommand": "",
+  "buildCommand": "node tools/build.js",
+  "outputDirectory": "dist",
+  "headers": [
+    { "source": "/assets/voice/(.*)", "headers": [{ "key": "Cache-Control", "value": "public, max-age=604800" }] }
+  ]
+}
