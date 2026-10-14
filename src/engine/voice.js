@@ -1,5 +1,6 @@
 // ASHEN VOW — voiced dialogue. Plays pre-generated lines (assets/voice, built by tools/voices.js) in sync with
-// the dialogue box. Every line has a text fallback: a missing file simply means silence and the usual blips.
+// the dialogue box. Only characters are voiced; narration keeps the typewriter blips. Every line has a text
+// fallback: a missing file simply means silence and the usual blips.
 (function (AV) {
   'use strict';
 
@@ -11,10 +12,13 @@
     get playing() { return !!(current && !current.paused && !current.ended); },
     keyFor(s) { return s && s.id && s.nodeId != null ? s.id + '|' + s.nodeId + '|' + s.page : null; },
     has(s) { const k = V.keyFor(s); return !!(k && V.manifest[k]); },
+    // narration (descriptions, atmosphere) is read, never heard: only characters speak aloud
+    isNarration(s) { return !s || !s.who || s.who === 'narrator' || s.who === '__page'; },
 
     // called by the dialogue system whenever a new page appears
     page(s) {
       V.stop();
+      if (V.isNarration(s)) return;
       const k = V.keyFor(s);
       const src = k && V.manifest[k];
       if (!src) return;

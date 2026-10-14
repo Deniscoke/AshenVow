@@ -5,9 +5,12 @@
 //   node tools/voices.js --dry                 count characters per speaker, no requests
 //   node tools/voices.js                       voice everything not yet generated (resumable)
 //   node tools/voices.js --only linnet,brand   only these speakers
-//   node tools/voices.js --skip narrator       leave the narrator silent
+//   node tools/voices.js --skip mound          leave a speaker silent
 //   node tools/voices.js --model eleven_flash_v2_5   cheaper model (default eleven_multilingual_v2)
 //   node tools/voices.js --limit 20            stop after N new lines (try a sample first)
+//   node tools/voices.js --prune               delete files for lines that are no longer voiced (cut text, narration)
+//
+// Narration (who: 'narrator' or no speaker) is deliberately never voiced — only characters speak aloud.
 'use strict';
 const fs = require('fs');
 const path = require('path');
@@ -18,6 +21,7 @@ const argv = process.argv.slice(2);
 const flag = (n) => argv.includes('--' + n);
 const opt = (n, d) => { const i = argv.indexOf('--' + n); return i >= 0 ? argv[i + 1] : d; };
 const DRY = flag('dry');
+const PRUNE = flag('prune');
 const ONLY = opt('only', '') ? opt('only').split(',') : null;
 const SKIP = opt('skip', '') ? opt('skip').split(',') : [];
 const MODEL = opt('model', 'eleven_multilingual_v2');
@@ -26,7 +30,6 @@ const CONCURRENCY = +opt('concurrency', 3);
 
 // ElevenLabs default voices (usable with any account). Tuned per character.
 const VOICES = {
-  narrator: { id: 'JBFqnCBsd6RMkjVDRZzb', stability: 0.55, style: 0.25 },   // George — warm storyteller
   brand: { id: 'N2lVS1w4EtoT3dr4eOWO', stability: 0.45, style: 0.35 },      // Callum — husky, haunted
   linnet: { id: 'pFZP5JQG7iQjIQuC4Bku', stability: 0.5, style: 0.3 },       // Lily — dry, raspy
   snuffer: { id: 'onwK4e9ZLuTAKqWW03F9', stability: 0.7, style: 0.2 },      // Daniel — courtly, patient
@@ -62,7 +65,7 @@ const { AV } = loadGame({ headless: true });
 const strip = (t) => (AV.font ? AV.font.strip(t) : t.replace(/\{[a-z/]\}/g, ''));
 
 function voiceFor(who) {
-  if (!who) return null;
+  if (!who || who === 'narrator' || who === '__page') return null;
   if (VOICES[who]) return who;
   const sp = AV.data.speakers[who];
   const p = sp && sp.portrait;
@@ -71,8 +74,8 @@ function voiceFor(who) {
   return null;
 }
 
-// Collect every page of every dialogue
-const lines = [];
+// Collect every voiced page of every dialogue (narration and live-number pages are left out)
+const voiced = [];
 for (const [did, d] of Object.entries(AV.data.dialogue)) {
   for (const [nid, n] of Object.entries(d.nodes || {})) {
     const pages = n.text == null ? [] : [].concat(n.text);
@@ -81,14 +84,15 @@ for (const [did, d] of Object.entries(AV.data.dialogue)) {
       const text = strip(t).replace(/\s+/g, ' ').trim();
       if (!text || /^[….\s]+$/.test(text)) return;          // silences stay silent
       const who = n.who || 'narrator';
-      const v = voiceFor(who === 'narrator' ? 'narrator' : who);
+      const v = voiceFor(who);
       if (!v) return;
-      if (ONLY && !ONLY.includes(who) && !ONLY.includes(v)) return;
-      if (SKIP.includes(who) || SKIP.includes(v)) return;
-      lines.push({ key: `${did}|${nid}|${i}`, who, voice: v, text });
+      voiced.push({ key: `${did}|${nid}|${i}`, who, voice: v, text });
     });
   }
 }
+const voicedKeys = new Set(voiced.map((l) => l.key));
+const lines = voiced.filter((l) => !(ONLY && !ONLY.includes(l.who) && !ONLY.includes(l.voice))
+  && !SKIP.includes(l.who) && !SKIP.includes(l.voice));
 
 const OUT = path.join(ROOT, 'assets', 'voice');
 const INDEX = path.join(OUT, 'index.json');
@@ -97,22 +101,33 @@ const hash = (l) => crypto.createHash('sha1').update(l.voice + '|' + MODEL + '|'
 const fileFor = (l) => l.key.replace(/[^a-z0-9_]+/gi, '_') + '.mp3';
 
 const todo = lines.filter((l) => !(index[l.key] && index[l.key].hash === hash(l) && fs.existsSync(path.join(OUT, index[l.key].file))));
+const stale = Object.keys(index).filter((k) => !voicedKeys.has(k));
 
 const chars = {};
 for (const l of lines) chars[l.who] = (chars[l.who] || 0) + l.text.length;
 const todoChars = todo.reduce((n, l) => n + l.text.length, 0);
-console.log(`lines ${lines.length}, to generate ${todo.length} (${todoChars} characters, model ${MODEL})`);
+console.log(`lines ${lines.length}, to generate ${todo.length} (${todoChars} characters, model ${MODEL}), stale ${stale.length}`);
 if (DRY) {
   console.log(Object.entries(chars).sort((a, b) => b[1] - a[1]).map(([k, v]) => `${k}:${v}`).join('  '));
   process.exit(0);
 }
+
+if (PRUNE) {
+  for (const k of stale) {
+    const f = path.join(OUT, index[k].file);
+    if (fs.existsSync(f)) fs.unlinkSync(f);
+    delete index[k];
+  }
+  console.log(`pruned ${stale.length} lines that are no longer voiced`);
+}
+if (!todo.length) { writeManifest(); console.log('nothing to generate'); process.exit(0); }
 
 const KEY = apiKey();
 if (!KEY) { console.error('Set ELEVENLABS_API_KEY in the environment or in a .env file (never commit it).'); process.exit(1); }
 
 function writeManifest() {
   const map = {};
-  for (const [k, v] of Object.entries(index)) map[k] = 'assets/voice/' + v.file;
+  for (const [k, v] of Object.entries(index)) if (voicedKeys.has(k)) map[k] = 'assets/voice/' + v.file;
   fs.writeFileSync(INDEX, JSON.stringify(index, null, 0));
   fs.writeFileSync(path.join(OUT, 'manifest.js'),
     '// Generated by tools/voices.js - maps dialogue pages to voice files.\nwindow.AV_VOICE = ' + JSON.stringify(map) + ';\n');
