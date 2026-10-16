@@ -46,6 +46,7 @@
   let timer = null;
   let lastPump = 0;
   const vol = { master: 0.8, music: 0.7, sfx: 0.8 };
+  const MIX = { music: 1.3, ambience: 0.15 };   // fixed bus trims under the player's volume sliders
   let musicWanted = null;        // last requested music id (may be pending until init)
   let current = null;            // current track instance
   const tracks = [];             // live track instances (current + fading ones)
@@ -1513,7 +1514,8 @@
     g.verb.buffer = makeIR(3.4);
     wire(g.verbIn, g.verb, gain(0.9), g.master);
 
-    g.musicDry = gain(curve(vol.music)); g.musicDry.connect(g.master);
+    // mix balance: music sits a little forward, ambience beds well under it (they set mood, never mask music or voices)
+    g.musicDry = gain(curve(vol.music)); wire(g.musicDry, gain(MIX.music), g.master);
     g.musicWet = gain(curve(vol.music)); g.musicWet.connect(g.verbIn);
     g.sfxDry = gain(curve(vol.sfx)); g.sfxDry.connect(g.master);
     g.sfxWet = gain(curve(vol.sfx)); g.sfxWet.connect(g.verbIn);
@@ -1529,7 +1531,7 @@
     wire(ehp, gain(0.4), g.musicWet);
 
     // ambience: through a low-pass that closes indoors, into the sfx buses
-    g.amb = gain(1);
+    g.amb = gain(MIX.ambience);
     g.ambLP = bq('lowpass', nyq * 0.9, 0);
     wire(g.amb, g.ambLP, g.sfxDry);
     wire(g.ambLP, gain(0.15), g.sfxWet);
