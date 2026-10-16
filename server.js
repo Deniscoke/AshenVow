@@ -5,7 +5,7 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 
-const ROOT = __dirname;
+const ROOT = path.resolve(__dirname, process.argv[3] || '.');   // node server.js 8081 dist  serves the build
 const PORT = +(process.argv[2] || process.env.PORT || 8080);
 const TYPES = {
   '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8',

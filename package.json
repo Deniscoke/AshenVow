@@ -10,7 +10,9 @@
     "test": "node tools/check.js && node tools/audio_smoke.js && node tools/sim.js all",
     "preview": "node tools/preview.js",
     "sim": "node tools/sim.js all",
-    "build": "node tools/build.js"
+    "build": "node tools/build.js",
+    "build:itch": "node tools/build.js --zip",
+    "serve:dist": "node server.js 8081 dist"
   },
   "engines": {
     "node": ">=18"
